@@ -3,7 +3,7 @@ from read_to_config import *
 from playwright.sync_api import sync_playwright
 
 def parse_tooltip(tooltip: str) -> dict | None:
-    """Функция фильтрации пользователей на странице. Написал с помощью ИИ!"""
+    """Функция фильтрации пользователей на странице. Написано с помощью ИИ!"""
     # Пропускаем служебного пользователя
     if tooltip.startswith("jira_estimate"):
         return None
@@ -64,7 +64,7 @@ with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page()
     try:
-        # --- АВТОРИЗАЦИЯ ---
+        # Авторизация
         print("Авторизация...")
         logging.info("Начало авторизации")
     
@@ -89,7 +89,7 @@ with sync_playwright() as p:
                 frame = page.frame_locator(".agilepoker-iframe")
                 frame.locator(".session-participants-status").wait_for()
 
-                # Имя Проекта и достки
+                # Наименование проекта и доски
                 header = frame.locator(".session-layout-header")
                 title = header.locator(".session-layout-header-subtitle a").inner_text()
                 full_text = header.inner_text()
@@ -111,7 +111,7 @@ with sync_playwright() as p:
                     if parsed:
                         results.append(parsed)
 
-                # Ообрабатываем каждую доску
+                # Обрабатываем данные с сессии/доски
                 res = filter_res(results)
                 result = filter_check(res)
             
