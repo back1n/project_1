@@ -62,6 +62,18 @@ playwright install
 | output_format | Формат вывода (cvs по умолчанию). P.s пока реализовано только отображение в cmd!!! |
 | log_file      | Имя файла для записи логов выполнения                                              |
 
+
+В файле connect_playwright.py, по умолчанию отключено отображение работы браузера
+
+62 строчка
+```python
+browser = p.chromium.launch(headless=True)
+```
+
+Для отображения окна браузера, изменить параметр на False:
+```python
+browser = p.chromium.launch(headless=False)
+```
 ## Запуск
 
 Выполните:
