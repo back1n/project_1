@@ -14,7 +14,7 @@ except FileNotFoundError:
 LOG_FILE = data.get('log_file', 'jira_rating_check.log')
 logging.basicConfig(
     filename=LOG_FILE,
-    filemode='w'
+    filemode='w',
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s',
     encoding='utf-8'
