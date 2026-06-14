@@ -23,14 +23,14 @@ logging.basicConfig(
 
 # ПЕРЕМЕННЫЕ
 try:
-    JIRA_URL   = data['jira_url']  # Авторизация
-    USERNAME   = data['username']  # Логин пользователя
-    PASSWORD   = data['password']  # Пароль пользователя
-    SESSIONS   = data['sessions']   # это список ссылок
+    JIRA_URL = data['jira_url']  # Авторизация
+    USERNAME = data['username']  # Логин пользователя
+    PASSWORD = data['password']  # Пароль пользователя
+    BOARDS = data['sessions']   # это список ссылок
     OUT_FORMAT = data.get('output_format', 'csv')  # необязательный параметр
 
     logging.info('Конфиг успешно прочитан')
-    print(f"Загружено сессий: {len(SESSIONS)}")  # кол-во ссылок 
+    print(f"Загружено сессий: {len(BOARDS)}")  # кол-во ссылок 
 
 except KeyError as key:
     logging.error(f"Не обнаружен параметр {key}")
