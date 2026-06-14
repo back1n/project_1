@@ -34,10 +34,19 @@ def parse_tooltip(tooltip: str) -> dict | None:
 
 
 def filter_res(parsed) -> list:
-    """Функция для фильтрации пользователей которые уже могут не работать"""
+    """Функция для фильтрации пользователей которые уже могут не работать и так-же люди которые не оценивают(Пелюшенко, Петухова)"""
     result_list = []
+
+    # Список в который можно добавить людей, которые не оценивают
+    dont_appreciate = [
+                    "Пелюшенко Сергей Владимирович",
+                    "Петухова Виктория Александровна"
+                    ]
+    
     for participant in parsed:
         if participant['estimate'] == 'X':
+            continue
+        elif participant['name'] in dont_appreciate:
             continue
         else:
             result_list.append(participant)
@@ -60,27 +69,83 @@ def filter_check(result_list) -> list:
     return res
 
 
+def check_authorization(page):
+    if "login" not in page.url and not page.locator("#login-form-username").is_visible():
+        print("Авторизация не требуется")
+        return
+    
+
+    print("Авторизация...")
+    logging.info("Начало авторизации")
+    
+    page.goto(f"{BOARDS[0]}/login")
+    page.wait_for_selector("#login-form-username")
+    
+    page.fill("#login-form-username", USERNAME)
+    page.fill("#login-form-password", PASSWORD)
+    page.click("#login-form-submit")
+    
+    #page.wait_for_url("**/secure/**")
+    print(f"URL авторизован.")
+    logging.info(f"Успешная авторизация. URL: {page.url}")
+
+
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page()
-    try:
-        # Авторизация
-        print("Авторизация...")
-        logging.info("Начало авторизации")
+    res_session = []  # Список для хранения ссылок(досок)
+
+    #Цикл по ссылкам проектов
+    for board in BOARDS:
+        try:
+            page.goto(board)
+            page.wait_for_load_state("networkidle")
+            
+            check_authorization(page)  # Авторизация
+
+            page.wait_for_load_state("networkidle")
+
+            # Ждём загрузки iframe(таблицы)
+            page.wait_for_selector(".agilepoker-iframe")
+            frame = page.frame_locator(".agilepoker-iframe")
     
-        page.goto(f"{JIRA_URL}/login")
-        page.wait_for_selector("#login-form-username")
-    
-        page.fill("#login-form-username", USERNAME)
-        page.fill("#login-form-password", PASSWORD)
-        page.click("#login-form-submit")
-    
-        page.wait_for_url("**/secure/**")
-        print(f"Авторизован. URL: {page.url}")
-        logging.info(f"Успешная авторизация. URL: {page.url}")
+            # Ждём загрузку первой ссылки на доску
+            frame.locator("tbody tr").first.wait_for()
+
+
+            rows_count = frame.locator("tbody tr").count()  # Переменная для подсчета кол-ва ссылок на странице
+            for i in range(rows_count):
+                row = frame.locator("tbody tr").nth(i)
+                status = row.locator(".aui-lozenge-current")
+
+                # Проверка открыта сессия или нет
+                if not status.is_visible():
+                    continue
+                if status.inner_text().strip() != "OPEN":
+                    continue
+                    
+                print(f"OPEN сессия найдена ")
+                # Переходим по открытой сессии
+                row.locator("a").first.click()
+                page.wait_for_load_state("networkidle")
+
+                
+                res_session.append(page.url)  # Добаляем в список ссылок
+        
+                page.go_back()
+                page.wait_for_load_state("networkidle")
+        
+                # После возврата переинициализируем frame(Если первая сессия не подошла)
+                page.wait_for_selector(".agilepoker-iframe")
+                frame = page.frame_locator(".agilepoker-iframe")
+                frame.locator("tbody tr").first.wait_for()
+        except:
+            print("Ошибка авторизации или парсинга страницы")
+            logging.error(f"Ошибка авторизации или парсинга страницы {board}")
+
 
         # Цикл по Доскам
-        for index, session_url in enumerate(SESSIONS, start=1):
+        for index, session_url in enumerate(res_session, start=1):
             try:
                 page.goto(session_url)
                 page.wait_for_load_state("networkidle")
@@ -119,7 +184,7 @@ with sync_playwright() as p:
                 for i in result:
                     print(f"  {i}")
                 
-                print("Сессия обработана")
+                print("\nСессия обработана")
                 logging.info(f"Сессия {session_url} обработана")
             except:
                 print(f"Ссессия {index} не обработана. Проверьте ссылку!")
@@ -127,8 +192,6 @@ with sync_playwright() as p:
             else:
                 print("\nВсе сессии обработаны!")
                 logging.info("Все сессии обработаны")
-    except:
-        print(f"Ошибка авторизации. Проверьте ссылку {JIRA_URL} на корректность или доступность")
-        logging.error(f"Ошибка авторизации {JIRA_URL}")
+
     
     browser.close()
