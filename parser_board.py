@@ -3,7 +3,7 @@ from playwright.sync_api import sync_playwright
 
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
+    browser = p.chromium.launch(headless=True)
     page = browser.new_page()
     res_session = []  # Список для хранения ссылок(досок)
 
@@ -53,7 +53,7 @@ with sync_playwright() as p:
                 
                 res_session.append(page.url)  # Добаляем в список ссылок
                 logging.info(f"Успешная добавление в res_session.\n{res_session}")
-                print(f"OPEN сессия добавлена в список")
+                logging.info(f"OPEN сессия добавлена в список")
                 break
                 
                 # Посчитал, что при первой найденной открытой сессии, мы выходим из цикла
@@ -71,6 +71,8 @@ with sync_playwright() as p:
         except:
             print("Ошибка авторизации или парсинга страницы")
             logging.error(f"Ошибка авторизации или парсинга страницы {board}")
+
+    print(f"Найдено OPEN досок: {len(res_session)}")
 
 
     browser.close()
