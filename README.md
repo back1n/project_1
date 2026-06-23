@@ -231,7 +231,7 @@ browser = p.chromium.launch(headless=False)
 
   
 
-python connect_playwright.py
+python parser_page.py
 
   
 
